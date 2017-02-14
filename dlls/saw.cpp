@@ -162,8 +162,6 @@ BOOL CSaw::Deploy()
 {
 	return DefaultDeploy("models/v_saw.mdl", "models/p_saw.mdl", M249_DEPLOY, "m249");
 }
-
-
 void CSaw::PrimaryAttack()
 {
 	// don't fire underwater
@@ -177,7 +175,7 @@ void CSaw::PrimaryAttack()
 	if (m_iClip <= 0)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack =gpGlobals->time + 0.15;
+		m_flNextPrimaryAttack = gpGlobals->time + 0.15;
 		return;
 	}
 
@@ -213,9 +211,6 @@ void CSaw::PrimaryAttack()
 		// single player spread
 		vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, VECTOR_CONE_3DEGREES, 8192, BULLET_PLAYER_556, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed);
 	}
-
-	int flags;
-	flags = FEV_NOTHOST;
 		switch( RANDOM_LONG( 0, 2 ) )
 		{
 		case 0:
@@ -229,6 +224,7 @@ void CSaw::PrimaryAttack()
 			break;
 }
 	pev->effects |= EF_MUZZLEFLASH;
+
 	//PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usM249, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
 
 
@@ -250,13 +246,14 @@ void CSaw::PrimaryAttack()
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	m_flNextPrimaryAttack = gpGlobals->time +0.1;
+	m_flNextPrimaryAttack = gpGlobals->time + 0.1;
 
 	if (m_flNextPrimaryAttack < UTIL_WeaponTimeBase())
 		m_flNextPrimaryAttack = gpGlobals->time + UTIL_WeaponTimeBase() + 0.1;
 
-	m_flTimeWeaponIdle = gpGlobals->time + UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
+	m_flTimeWeaponIdle = gpGlobals->time +  UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
 }
+
 
 
 void CSaw::Reload(void)
