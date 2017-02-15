@@ -22,6 +22,7 @@
 #include "player.h"
 #include "soundent.h"
 #include "gamerules.h"
+
 #define WEAPON_SAW 16
 
 
@@ -72,6 +73,7 @@ TYPEDESCRIPTION CSaw::m_SaveData[] =
 IMPLEMENT_SAVERESTORE(CSaw, CBasePlayerWeapon);
 
 
+
 enum m249_e
 {
 	M249_SLOWIDLE = 0,
@@ -98,7 +100,7 @@ void CSaw::Spawn()
 	SET_MODEL(ENT(pev), "models/w_saw.mdl");
 	m_iId = WEAPON_SAW;
 
-	m_iDefaultAmmo = 150;
+	m_iDefaultAmmo = 250;
 
 	m_iReloadState = RELOAD_STATE_NONE;
 
@@ -141,7 +143,7 @@ int CSaw::GetItemInfo(ItemInfo *p)
 	p->iPosition = 0;
 	p->iFlags = 0;
 	p->iId = m_iId = WEAPON_SAW;
-	p->iWeight = 10;
+	p->iWeight = 11;
 
 	return 1;
 }
@@ -162,20 +164,22 @@ BOOL CSaw::Deploy()
 {
 	return DefaultDeploy("models/v_saw.mdl", "models/p_saw.mdl", M249_DEPLOY, "m249");
 }
+
+
 void CSaw::PrimaryAttack()
 {
 	// don't fire underwater
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = gpGlobals->time + 0.15;
+		m_flNextPrimaryAttack =gpGlobals->time + 0.15;
 		return;
 	}
 
 	if (m_iClip <= 0)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = gpGlobals->time + 0.15;
+		m_flNextPrimaryAttack =gpGlobals->time +  0.15;
 		return;
 	}
 
@@ -211,19 +215,13 @@ void CSaw::PrimaryAttack()
 		// single player spread
 		vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, VECTOR_CONE_3DEGREES, 8192, BULLET_PLAYER_556, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed);
 	}
-		switch( RANDOM_LONG( 0, 2 ) )
-		{
-		case 0:
-		SendWeaponAnim( M249_SHOOT1 );
-			break;
-		case 1:
-		SendWeaponAnim( M249_SHOOT2 );
-			break;
-		case 2:
-		SendWeaponAnim( M249_SHOOT3 );
-			break;
-}
-	pev->effects |= EF_MUZZLEFLASH;
+
+	int flags;
+#if defined( CLIENT_WEAPONS )
+	flags = FEV_NOTHOST;
+#else
+	flags = 0;
+#endif
 
 	//PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usM249, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
 
@@ -246,14 +244,13 @@ void CSaw::PrimaryAttack()
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	m_flNextPrimaryAttack = gpGlobals->time + 0.1;
+	m_flNextPrimaryAttack =gpGlobals->time +  0.1;
 
 	if (m_flNextPrimaryAttack < UTIL_WeaponTimeBase())
-		m_flNextPrimaryAttack = gpGlobals->time + UTIL_WeaponTimeBase() + 0.1;
+		m_flNextPrimaryAttack =gpGlobals->time +  UTIL_WeaponTimeBase() + 0.1;
 
-	m_flTimeWeaponIdle = gpGlobals->time +  UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
+	m_flTimeWeaponIdle =gpGlobals->time +  UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
 }
-
 
 
 void CSaw::Reload(void)
@@ -289,7 +286,7 @@ void CSaw::WeaponIdle(void)
 
 	SendWeaponAnim(iAnim);
 
-	m_flTimeWeaponIdle = gpGlobals->time + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15); // how long till we do this again.
+	m_flTimeWeaponIdle =gpGlobals->time +  UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15); // how long till we do this again.
 }
 
 
@@ -318,7 +315,7 @@ class CSawAmmoClip : public CBasePlayerAmmo
 	}
 	BOOL AddAmmo(CBaseEntity *pOther)
 	{
-		int bResult = (pOther->GiveAmmo(150, "556", 500) != -1);
+		int bResult = (pOther->GiveAmmo(100, "556",500 ) != -1);
 		if (bResult)
 		{
 			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
