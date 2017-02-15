@@ -52,7 +52,11 @@ public:
 
 	virtual BOOL UseDecrement(void)
 	{
-		return FALSE;
+#if defined( CLIENT_WEAPONS )
+	return TRUE;
+#else
+	return FALSE;
+#endif
 	}
 
 	void ReloadStart( void );
@@ -71,7 +75,6 @@ TYPEDESCRIPTION CSaw::m_SaveData[] =
 	DEFINE_FIELD(CSaw, m_iReloadState, FIELD_INTEGER),
 };
 IMPLEMENT_SAVERESTORE(CSaw, CBasePlayerWeapon);
-
 
 
 enum m249_e
@@ -100,7 +103,7 @@ void CSaw::Spawn()
 	SET_MODEL(ENT(pev), "models/w_saw.mdl");
 	m_iId = WEAPON_SAW;
 
-	m_iDefaultAmmo = 250;
+	m_iDefaultAmmo = 150;
 
 	m_iReloadState = RELOAD_STATE_NONE;
 
@@ -143,7 +146,7 @@ int CSaw::GetItemInfo(ItemInfo *p)
 	p->iPosition = 0;
 	p->iFlags = 0;
 	p->iId = m_iId = WEAPON_SAW;
-	p->iWeight = 11;
+	p->iWeight = 10;
 
 	return 1;
 }
@@ -162,7 +165,7 @@ int CSaw::AddToPlayer(CBasePlayer *pPlayer)
 
 BOOL CSaw::Deploy()
 {
-	return DefaultDeploy("models/v_saw.mdl", "models/p_saw.mdl", M249_DEPLOY, "m249");
+	return DefaultDeploy("models/v_saw.mdl", "models/p_saw.mdl", M249_DEPLOY, "saw");
 }
 
 
@@ -172,14 +175,14 @@ void CSaw::PrimaryAttack()
 	if (m_pPlayer->pev->waterlevel == 3)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack =gpGlobals->time + 0.15;
+		m_flNextPrimaryAttack = 0.15;
 		return;
 	}
 
 	if (m_iClip <= 0)
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack =gpGlobals->time +  0.15;
+		m_flNextPrimaryAttack = 0.15;
 		return;
 	}
 
@@ -244,12 +247,12 @@ void CSaw::PrimaryAttack()
 		// HEV suit - indicate out of ammo condition
 		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
 
-	m_flNextPrimaryAttack =gpGlobals->time +  0.1;
+	m_flNextPrimaryAttack = gpGlobals->time + 0.1;
 
 	if (m_flNextPrimaryAttack < UTIL_WeaponTimeBase())
-		m_flNextPrimaryAttack =gpGlobals->time +  UTIL_WeaponTimeBase() + 0.1;
+		m_flNextPrimaryAttack = UTIL_WeaponTimeBase() + 0.1;
 
-	m_flTimeWeaponIdle =gpGlobals->time +  UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
 }
 
 
@@ -286,7 +289,7 @@ void CSaw::WeaponIdle(void)
 
 	SendWeaponAnim(iAnim);
 
-	m_flTimeWeaponIdle =gpGlobals->time +  UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15); // how long till we do this again.
+	m_flTimeWeaponIdle = UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15); // how long till we do this again.
 }
 
 
@@ -315,7 +318,7 @@ class CSawAmmoClip : public CBasePlayerAmmo
 	}
 	BOOL AddAmmo(CBaseEntity *pOther)
 	{
-		int bResult = (pOther->GiveAmmo(100, "556",500 ) != -1);
+		int bResult = (pOther->GiveAmmo(100, "556", 500) != -1);
 		if (bResult)
 		{
 			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
