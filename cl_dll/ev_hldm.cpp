@@ -57,6 +57,7 @@ void EV_FireShotGunDouble( struct event_args_s *args );
 void EV_FireMP5( struct event_args_s *args );
 void EV_FireMP52( struct event_args_s *args );
 void EV_FirePython( struct event_args_s *args );
+void EV_FireSaw( struct event_args_s *args );
 void EV_FireGauss( struct event_args_s *args );
 void EV_SpinGauss( struct event_args_s *args );
 void EV_Crowbar( struct event_args_s *args );
@@ -313,9 +314,13 @@ void EV_HLDM_DecalGunshot( pmtrace_t *pTrace, int iBulletType )
 		{
 		case BULLET_PLAYER_9MM:
 		case BULLET_MONSTER_9MM:
-		case BULLET_PLAYER_MP5:
+		case
+BULLET_PLAYER_MP5:
 		case BULLET_MONSTER_MP5:
-		case BULLET_PLAYER_BUCKSHOT:
+		case
+ BULLET_PLAYER_556:
+		case
+ BULLET_PLAYER_BUCKSHOT:
 		case BULLET_PLAYER_357:
 		default:
 			// smoke and decal
@@ -444,6 +449,9 @@ void EV_HLDM_FireBullets( int idx, float *forward, float *right, float *up, int 
 			case BULLET_PLAYER_BUCKSHOT:
 				EV_HLDM_DecalGunshot( &tr, iBulletType );
 				break;
+			case BULLET_PLAYER_556:
+				EV_HLDM_DecalGunshot( &tr, iBulletType );
+				break;
 			case BULLET_PLAYER_357:
 				EV_HLDM_PlayTextureSound( idx, &tr, vecSrc, vecEnd, iBulletType );
 				EV_HLDM_DecalGunshot( &tr, iBulletType );
@@ -550,7 +558,89 @@ void EV_FireGlock2( event_args_t *args )
 //======================
 //	   GLOCK END
 //======================
+//======================
+//	    SAW START
+//======================
 
+
+enum saw_e
+{
+	SAW_SLOWIDLE = 0,
+	SAW_IDLE2,
+	SAW_LAUNCH,
+	SAW_RELOAD1,
+	SAW_HOLSTER,
+	SAW_DEPLOY,
+	SAW_SHOOT1,
+	SAW_SHOOT2,
+	SAW_SHOOT3,
+};
+
+void EV_FireSaw(event_args_t *args)
+{
+	int idx;
+	vec3_t origin;
+	vec3_t angles;
+	vec3_t velocity;
+
+	vec3_t ShellVelocity;
+	vec3_t ShellOrigin;
+	int shell;
+	vec3_t vecSrc, vecAiming;
+	vec3_t up, right, forward;
+	float flSpread = 0.01;
+
+	idx = args->entindex;
+	VectorCopy(args->origin, origin);
+	VectorCopy(args->angles, angles);
+	VectorCopy(args->velocity, velocity);
+
+	AngleVectors(angles, forward, right, up);
+
+	shell = gEngfuncs.pEventAPI->EV_FindModelIndex("models/saw_shell.mdl");// brass shell
+
+	if (EV_IsLocal(idx))
+	{
+		// Add muzzle flash to current weapon model
+		EV_MuzzleFlash();
+		gEngfuncs.pEventAPI->EV_WeaponAnimation(SAW_SHOOT1 + gEngfuncs.pfnRandomLong(0, 2), 1);
+
+		V_PunchAxis(0, gEngfuncs.pfnRandomFloat(-2, 2));
+	}
+
+	EV_GetDefaultShellInfo(args, origin, velocity, ShellVelocity, ShellOrigin, forward, right, up, 20, -12, 4);
+
+	EV_EjectBrass(ShellOrigin, ShellVelocity, angles[YAW], shell, TE_BOUNCE_SHELL);
+
+	switch (gEngfuncs.pfnRandomLong(0, 2))
+	{
+	case 0:
+		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/saw_fire1.wav", 1, ATTN_NORM, 0, PITCH_NORM);
+		break;
+	case 1:
+		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/saw_fire2.wav", 1, ATTN_NORM, 0, PITCH_NORM);
+		break;
+	case 2:
+		gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/saw_fire3.wav", 1, ATTN_NORM, 0, PITCH_NORM);
+		break;
+	}
+
+	EV_GetGunPosition(args, vecSrc, origin);
+	VectorCopy(forward, vecAiming);
+
+	if (gEngfuncs.GetMaxClients() > 1)
+	{
+		EV_HLDM_FireBullets(idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_556, 2, &tracerCount[idx - 1], args->fparam1, args->fparam2);
+	}
+	else
+	{
+		EV_HLDM_FireBullets(idx, forward, right, up, 1, vecSrc, vecAiming, 8192, BULLET_PLAYER_556, 2, &tracerCount[idx - 1], args->fparam1, args->fparam2);
+	}
+}
+
+//======================
+//	   SAW END
+//======================
 //======================
 //	  SHOTGUN START
 //======================
@@ -1400,7 +1490,7 @@ enum EGON_FIREMODE
 
 #define	EGON_PRIMARY_VOLUME		450
 #define EGON_BEAM_SPRITE		"sprites/xbeam1.spr"
-#define EGON_FLARE_SPRITE		"sprites/XSpark1.spr"
+#define EGON_FLARE_SPRITE		"sprites/sparks.spr"
 #define EGON_SOUND_OFF			"weapons/egon_off1.wav"
 #define EGON_SOUND_RUN			"weapons/egon_run3.wav"
 #define EGON_SOUND_STARTUP		"weapons/egon_windup2.wav"

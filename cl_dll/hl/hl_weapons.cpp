@@ -67,6 +67,7 @@ CHandGrenade g_HandGren;
 CSatchel g_Satchel;
 CTripmine g_Tripmine;
 CSqueak g_Snark;
+CSaw g_Saw;
 
 /*
 ======================
@@ -637,6 +638,7 @@ void HUD_InitClientWeapons( void )
 	HUD_PrepEntity( &g_Satchel, &player );
 	HUD_PrepEntity( &g_Tripmine, &player );
 	HUD_PrepEntity( &g_Snark, &player );
+	HUD_PrepEntity( &g_Saw, &player );
 }
 
 /*
@@ -741,6 +743,9 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 			break;
 		case WEAPON_SNARK:
 			pWeapon = &g_Snark;
+			break;
+case WEAPON_SAW:
+			pWeapon = &g_Saw;
 			break;
 	}
 
@@ -851,6 +856,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 		( (CRpg *)player.m_pActiveItem )->m_fSpotActive = (int)from->client.vuser2[1];
 		( (CRpg *)player.m_pActiveItem )->m_cActiveRockets = (int)from->client.vuser2[2];
 	}
+	else if (player.m_pActiveItem->m_iId == WEAPON_SAW)
+	{
+		player.ammo_556 = (int)from->client.vuser2[1];
+	}
 
 	// Don't go firing anything if we have died.
 	// Or if we don't have a weapon model deployed
@@ -918,6 +927,10 @@ void HUD_WeaponsPostThink( local_state_s *from, local_state_s *to, usercmd_t *cm
 	{
 		from->client.vuser2[1] = ( (CRpg *)player.m_pActiveItem)->m_fSpotActive;
 		from->client.vuser2[2] = ( (CRpg *)player.m_pActiveItem)->m_cActiveRockets;
+	}
+	else if ( player.m_pActiveItem->m_iId == WEAPON_SAW )
+	{
+		from->client.vuser2[1] = player.ammo_556;
 	}
 
 	// Make sure that weapon animation matches what the game .dll is telling us

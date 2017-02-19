@@ -21,6 +21,7 @@
 #include "nodes.h"
 #include "player.h"
 #include "gamerules.h"
+#include "effects.h"
 
 #define	CROWBAR_BODYHIT_VOLUME 128
 #define	CROWBAR_WALLHIT_VOLUME 512
@@ -290,6 +291,7 @@ int CCrowbar::Swing( int fFirst )
 				EMIT_SOUND_DYN( ENT( m_pPlayer->pev ), CHAN_ITEM, "weapons/cbar_hit2.wav", fvolbar, ATTN_NORM, 0, 98 + RANDOM_LONG( 0, 3 ) );
 				break;
 			}
+UTIL_ScreenShake( pev->origin, 20.0, 50.0, 1.0, 10 );
 
 			// delay the decal a bit
 			m_trHit = tr;

@@ -41,6 +41,8 @@ DLL_GLOBAL const char *g_pModelNameLaser = "sprites/laserbeam.spr";
 DLL_GLOBAL	short g_sModelIndexLaserDot;// holds the index for the laser beam dot
 DLL_GLOBAL	short g_sModelIndexFireball;// holds the index for the fireball
 DLL_GLOBAL	short g_sModelIndexSmoke;// holds the index for the smoke cloud
+DLL_GLOBAL	short
+g_sModelIndexFireball2;// holds the index for the fireball
 DLL_GLOBAL	short g_sModelIndexWExplosion;// holds the index for the underwater explosion
 DLL_GLOBAL	short g_sModelIndexBubbles;// holds the index for the bubbles model
 DLL_GLOBAL	short g_sModelIndexBloodDrop;// holds the sprite index for the initial blood
@@ -356,12 +358,15 @@ void W_Precache( void )
 		UTIL_PrecacheOther( "weaponbox" );// container for dropped deathmatch weapons
 	}
 #endif
-	g_sModelIndexFireball = PRECACHE_MODEL( "sprites/zerogxplode.spr" );// fireball
-	g_sModelIndexWExplosion = PRECACHE_MODEL( "sprites/wxplo.spr" );// underwater fireball
+	g_sModelIndexFireball = PRECACHE_MODEL( "sprites/xplo5.spr" );
+
+g_sModelIndexFireball2 = PRECACHE_MODEL( "sprites/xplo2.spr" );
+
+	g_sModelIndexWExplosion = PRECACHE_MODEL( "sprites/WXplo1.spr" );// underwater fireball
 	g_sModelIndexSmoke = PRECACHE_MODEL( "sprites/steam1.spr" );// smoke
 	g_sModelIndexBubbles = PRECACHE_MODEL( "sprites/bubble.spr" );//bubbles
-	g_sModelIndexBloodSpray = PRECACHE_MODEL( "sprites/bloodspray.spr" ); // initial blood
-	g_sModelIndexBloodDrop = PRECACHE_MODEL( "sprites/blood.spr" ); // splattered blood 
+	g_sModelIndexBloodSpray = PRECACHE_MODEL( "sprites/blood/extra/hbloodupb.spr" ); // initial blood
+	g_sModelIndexBloodDrop = PRECACHE_MODEL( "sprites/blood/extra/hbloodupb.spr" ); // splattered blood 
 
 	g_sModelIndexLaser = PRECACHE_MODEL( (char *)g_pModelNameLaser );
 	g_sModelIndexLaserDot = PRECACHE_MODEL( "sprites/laserdot.spr" );
@@ -1472,6 +1477,13 @@ TYPEDESCRIPTION	CRpgRocket::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE( CRpgRocket, CGrenade )
+
+
+TYPEDESCRIPTION CSaw::m_SaveData[] =
+{
+	DEFINE_FIELD(CSaw, m_iReloadState, FIELD_INTEGER),
+};
+IMPLEMENT_SAVERESTORE(CSaw, CBasePlayerWeapon);
 
 TYPEDESCRIPTION	CShotgun::m_SaveData[] =
 {

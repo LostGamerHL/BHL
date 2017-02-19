@@ -26,6 +26,7 @@ LOCAL_CFLAGS += -DCLIENT_DLL=1
 SRCS=
 SRCS_C=
 SRCS+=../dlls/crossbow.cpp
+SRCS+=../dlls/saw.cpp
 SRCS+=../dlls/crowbar.cpp
 SRCS+=../dlls/egon.cpp
 SRCS+=./ev_hldm.cpp

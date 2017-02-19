@@ -23,71 +23,18 @@
 #include "soundent.h"
 #include "gamerules.h"
 
-#define WEAPON_SAW 16
 
-
-class CSaw : public CBasePlayerWeapon
+enum saw_e
 {
-public:
-
-#ifndef CLIENT_DLL
-	int		Save(CSave &save);
-	int		Restore(CRestore &restore);
-	static	TYPEDESCRIPTION m_SaveData[];
-#endif
-
-	void Spawn(void);
-	void Precache(void);
-	int iItemSlot(void) { return 6; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer(CBasePlayer *pPlayer);
-
-	void PrimaryAttack(void);
-	BOOL Deploy(void);
-	void Reload(void);
-	void WeaponIdle(void);
-	virtual BOOL ShouldWeaponIdle(void) { return TRUE; }
-	float m_flNextAnimTime;
-	int m_iShell;
-
-	virtual BOOL UseDecrement(void)
-	{
-#if defined( CLIENT_WEAPONS )
-	return TRUE;
-#else
-	return FALSE;
-#endif
-	}
-
-	void ReloadStart( void );
-	void ReloadInsert( void );
-
-	enum M249_RELOAD_STATE { RELOAD_STATE_NONE = 0, RELOAD_STATE_OPEN, RELOAD_STATE_FILL };
-
-	int m_iReloadState;
-
-private:
-	//unsigned short m_usM249;
-};
-
-TYPEDESCRIPTION CSaw::m_SaveData[] =
-{
-	DEFINE_FIELD(CSaw, m_iReloadState, FIELD_INTEGER),
-};
-IMPLEMENT_SAVERESTORE(CSaw, CBasePlayerWeapon);
-
-
-enum m249_e
-{
-	M249_SLOWIDLE = 0,
-	M249_IDLE2,
-	M249_LAUNCH,
-	M249_RELOAD1,
-	M249_HOLSTER,
-	M249_DEPLOY,
-	M249_SHOOT1,
-	M249_SHOOT2,
-	M249_SHOOT3,
+	SAW_SLOWIDLE = 0,
+	SAW_IDLE2,
+	SAW_LAUNCH,
+	SAW_RELOAD1,
+	SAW_HOLSTER,
+	SAW_DEPLOY,
+	SAW_SHOOT1,
+	SAW_SHOOT2,
+	SAW_SHOOT3,
 };
 
 
@@ -131,7 +78,7 @@ void CSaw::Precache(void)
 
 	PRECACHE_SOUND("weapons/357_cock1.wav");
 
-	//m_usM249 = PRECACHE_EVENT(1, "events/m249.sc");
+	m_usSaw = PRECACHE_EVENT(1, "events/saw.sc");
 }
 
 int CSaw::GetItemInfo(ItemInfo *p)
@@ -165,7 +112,7 @@ int CSaw::AddToPlayer(CBasePlayer *pPlayer)
 
 BOOL CSaw::Deploy()
 {
-	return DefaultDeploy("models/v_saw.mdl", "models/p_saw.mdl", M249_DEPLOY, "saw");
+	return DefaultDeploy("models/v_saw.mdl", "models/p_saw.mdl", SAW_DEPLOY, "saw");
 }
 
 
@@ -226,7 +173,7 @@ void CSaw::PrimaryAttack()
 	flags = 0;
 #endif
 
-	//PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usM249, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
+	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usSaw, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
 
 
 #ifndef CLIENT_DLL
@@ -261,7 +208,7 @@ void CSaw::Reload(void)
 	if (m_pPlayer->ammo_556 <= 0)
 		return;
 
-	DefaultReload(100, M249_RELOAD1, 1.5);
+	DefaultReload(100, SAW_RELOAD1, 1.5);
 }
 
 
@@ -278,12 +225,12 @@ void CSaw::WeaponIdle(void)
 	switch (RANDOM_LONG(0, 1))
 	{
 	case 0:
-		iAnim = M249_SLOWIDLE;
+		iAnim = SAW_SLOWIDLE;
 		break;
 
 	default:
 	case 1:
-		iAnim = M249_IDLE2;
+		iAnim = SAW_IDLE2;
 		break;
 	}
 
@@ -295,12 +242,12 @@ void CSaw::WeaponIdle(void)
 
 void CSaw::ReloadStart(void)
 {
-	SendWeaponAnim(M249_RELOAD1, UseDecrement());
+	SendWeaponAnim(SAW_RELOAD1, UseDecrement());
 }
 
 void CSaw::ReloadInsert(void)
 {
-	SendWeaponAnim(M249_RELOAD1, UseDecrement());
+	SendWeaponAnim(SAW_RELOAD1, UseDecrement());
 }
 
 class CSawAmmoClip : public CBasePlayerAmmo
