@@ -49,6 +49,7 @@ void CGrenade::Explode( Vector vecSrc, Vector vecAim )
 // UNDONE: temporary scorching for PreAlpha - find a less sleazy permenant solution.
 void CGrenade::Explode( TraceResult *pTrace, int bitsDamageType )
 {
+	UTIL_ScreenShake( pev->origin, 60.0, 160.0, 2.0, 1200 );
 	float flRndSound;// sound randomizer
 
 	pev->model = iStringNull;//invisible

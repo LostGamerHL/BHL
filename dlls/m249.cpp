@@ -1,9 +1,9 @@
 /***
 *
-*	Copyright (c) 1996-2001, Valve LLC. All rights reserved.
-*
-*	This product contains software technology licensed from Id
-*	Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc.
+*	Copyright (c) 1996-2002, Valve LLC. All rights reserved.
+*	
+*	This product contains software technology licensed from Id 
+*	Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc. 
 *	All Rights Reserved.
 *
 *   Use, distribution, and modification of this source code and/or resulting
@@ -23,8 +23,6 @@
 #include "soundent.h"
 #include "gamerules.h"
 
-#define WEAPON_SAW 16
-
 enum m249_e
 {
 	M249_SLOWIDLE = 0,
@@ -38,78 +36,19 @@ enum m249_e
 	M249_SHOOT3,
 };
 
-
-class CM249 : public CBasePlayerWeapon
-{
-public:
-
-#ifndef CLIENT_DLL
-	int		Save(CSave &save);
-	int		Restore(CRestore &restore);
-	static	TYPEDESCRIPTION m_SaveData[];
-#endif
-
-	void Spawn(void);
-	void Precache(void);
-	int iItemSlot(void) { return 6; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer(CBasePlayer *pPlayer);
-
-	void PrimaryAttack(void);
-	BOOL Deploy(void);
-	void Reload(void);
-	void WeaponIdle(void);
-	virtual BOOL ShouldWeaponIdle(void) { return TRUE; }
-	float m_flNextAnimTime;
-	int m_iShell;
-
-	virtual BOOL UseDecrement(void)
-	{
-/*#if defined( CLIENT_WEAPONS )
-		return TRUE;
-#else*/
-		return FALSE;
-//#endif
-	}
-
-	void ReloadStart( void );
-	void ReloadInsert( void );
-
-	enum M249_RELOAD_STATE { RELOAD_STATE_NONE = 0, RELOAD_STATE_OPEN, RELOAD_STATE_FILL };
-
-	int m_iReloadState;
-
-private:
-	unsigned short m_usM249;
-};
-
-
-TYPEDESCRIPTION	CM249::m_SaveData[] =
-{
-	DEFINE_FIELD(CM249, m_iReloadState, FIELD_INTEGER),
-};
-IMPLEMENT_SAVERESTORE(CM249, CBasePlayerWeapon);
-
-
-LINK_ENTITY_TO_CLASS(weapon_saw, CM249);
-
-
-//=========================================================
-//=========================================================
+LINK_ENTITY_TO_CLASS( weapon_saw, CM249 )
 
 void CM249::Spawn()
 {
+	pev->classname = MAKE_STRING( "weapon_saw" ); // hack to allow for old names
 	Precache();
-	SET_MODEL(ENT(pev), "models/w_saw.mdl");
+	SET_MODEL( ENT( pev ), "models/w_saw.mdl" );
 	m_iId = WEAPON_SAW;
 
 	m_iDefaultAmmo = 100;
 
-	m_iReloadState = RELOAD_STATE_NONE;
-
 	FallInit();// get ready to fall down.
 }
-
 
 void CM249::Precache(void)
 {
@@ -134,9 +73,10 @@ void CM249::Precache(void)
 	m_usM249 = PRECACHE_EVENT(1, "events/saw.sc");
 }
 
-int CM249::GetItemInfo(ItemInfo *p)
+
+int CM249::GetItemInfo( ItemInfo *p )
 {
-	p->pszName = STRING(pev->classname);
+	p->pszName = STRING( pev->classname );
 	p->pszAmmo1 = "556";
 	p->iMaxAmmo1 = 300;
 	p->pszAmmo2 = NULL;
@@ -151,12 +91,12 @@ int CM249::GetItemInfo(ItemInfo *p)
 	return 1;
 }
 
-int CM249::AddToPlayer(CBasePlayer *pPlayer)
+int CM249::AddToPlayer( CBasePlayer *pPlayer )
 {
-	if (CBasePlayerWeapon::AddToPlayer(pPlayer))
+	if( CBasePlayerWeapon::AddToPlayer( pPlayer ) )
 	{
-		MESSAGE_BEGIN(MSG_ONE, gmsgWeapPickup, NULL, pPlayer->pev);
-			WRITE_BYTE(m_iId);
+		MESSAGE_BEGIN( MSG_ONE, gmsgWeapPickup, NULL, pPlayer->pev );
+			WRITE_BYTE( m_iId );
 		MESSAGE_END();
 		return TRUE;
 	}
@@ -165,71 +105,29 @@ int CM249::AddToPlayer(CBasePlayer *pPlayer)
 
 BOOL CM249::Deploy()
 {
-	return DefaultDeploy("models/v_saw.mdl", "models/p_saw.mdl", M249_DEPLOY, "m249");
+	return DefaultDeploy( "models/v_saw.mdl", "models/p_saw.mdl", M249_DEPLOY, "saw" );
 }
-
 
 void CM249::PrimaryAttack()
 {
 	// don't fire underwater
-	if (m_pPlayer->pev->waterlevel == 3)
+	if( m_pPlayer->pev->waterlevel == 3 )
 	{
 		PlayEmptySound();
 		m_flNextPrimaryAttack = gpGlobals->time + 0.15;
 		return;
 	}
 
-	if (m_iClip <= 0)
+	if( m_iClip <= 0 )
 	{
 		PlayEmptySound();
-		m_flNextPrimaryAttack = gpGlobals->time +  0.15;
+		m_flNextPrimaryAttack = gpGlobals->time + 0.15;
 		return;
 	}
 
 	m_pPlayer->pev->punchangle.x = RANDOM_FLOAT( 1.0f, 1.5f );
 	m_pPlayer->pev->punchangle.y = RANDOM_FLOAT( -0.5f, -0.2f );
 
-	m_pPlayer->m_iWeaponVolume = NORMAL_GUN_VOLUME;
-	m_pPlayer->m_iWeaponFlash = NORMAL_GUN_FLASH;
-
-	m_iClip--;
-
-
-	m_pPlayer->pev->effects = (int)(m_pPlayer->pev->effects) | EF_MUZZLEFLASH;
-
-	// player "shoot" animation
-	m_pPlayer->SetAnimation(PLAYER_ATTACK1);
-
-	Vector vecSrc = m_pPlayer->GetGunPosition();
-	Vector vecAiming = m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
-	Vector vecDir;
-
-#ifdef CLIENT_DLL
-	if (!bIsMultiplayer())
-#else
-	if (!g_pGameRules->IsMultiplayer())
-#endif
-	{
-		// optimized multiplayer. Widened to make it easier to hit a moving player
-		vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, VECTOR_CONE_6DEGREES, 8192, BULLET_PLAYER_556, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-	}
-	else
-	{
-		// single player spread
-		vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, VECTOR_CONE_3DEGREES, 8192, BULLET_PLAYER_556, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed);
-	}
-
-	int flags;
-#if defined( CLIENT_WEAPONS )
-	flags = FEV_NOTHOST;
-#else
-	flags = 0;
-#endif
-
-	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usM249, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0);
-
-
-#ifndef CLIENT_DLL
 	// Add inverse impulse, but only if we are on the ground.
 	// This is mainly to avoid too-high air velocity.
 	if (m_pPlayer->pev->flags & FL_ONGROUND)
@@ -241,90 +139,113 @@ void CM249::PrimaryAttack()
 		// Add backward velocity
 		m_pPlayer->pev->velocity.z = flZVel;
 	}
+
+	m_pPlayer->m_iWeaponVolume = NORMAL_GUN_VOLUME;
+	m_pPlayer->m_iWeaponFlash = NORMAL_GUN_FLASH;
+
+	m_iClip--;
+
+	m_pPlayer->pev->effects = (int)( m_pPlayer->pev->effects ) | EF_MUZZLEFLASH;
+
+	// player "shoot" animation
+	m_pPlayer->SetAnimation( PLAYER_ATTACK1 );
+
+	Vector vecSrc = m_pPlayer->GetGunPosition();
+	Vector vecAiming = m_pPlayer->GetAutoaimVector( AUTOAIM_5DEGREES );
+	Vector vecDir;
+#ifdef CLIENT_DLL
+	if( !bIsMultiplayer() )
+#else
+	if( !g_pGameRules->IsMultiplayer() )
 #endif
+	{
+		// optimized multiplayer. Widened to make it easier to hit a moving player
+		vecDir = m_pPlayer->FireBulletsPlayer( 1, vecSrc, vecAiming, VECTOR_CONE_6DEGREES, 8192, BULLET_PLAYER_556, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed );
+	}
+	else
+	{
+		// single player spread
+		vecDir = m_pPlayer->FireBulletsPlayer( 1, vecSrc, vecAiming, VECTOR_CONE_3DEGREES, 8192, BULLET_PLAYER_556, 2, 0, m_pPlayer->pev, m_pPlayer->random_seed );
+	}
 
-	if (!m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0)
+	int flags;
+#if defined( CLIENT_WEAPONS )
+	flags = FEV_NOTHOST;
+#else
+	flags = 0;
+#endif
+	PLAYBACK_EVENT_FULL( flags, m_pPlayer->edict(), m_usM249, 0.0, (float *)&g_vecZero, (float *)&g_vecZero, vecDir.x, vecDir.y, 0, 0, 0, 0 );
+
+	if( !m_iClip && m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] <= 0 )
 		// HEV suit - indicate out of ammo condition
-		m_pPlayer->SetSuitUpdate("!HEV_AMO0", FALSE, 0);
+		m_pPlayer->SetSuitUpdate( "!HEV_AMO0", FALSE, 0 );
 
-	m_flNextPrimaryAttack = gpGlobals->time + 0.1;// GetNextAttackDelay(0.1);
+	m_flNextPrimaryAttack = gpGlobals->time + UTIL_WeaponTimeBase() + 0.1;
 
-	if (m_flNextPrimaryAttack < UTIL_WeaponTimeBase())
+	if( m_flNextPrimaryAttack < UTIL_WeaponTimeBase() )
 		m_flNextPrimaryAttack = gpGlobals->time +  UTIL_WeaponTimeBase() + 0.1;
 
-	m_flTimeWeaponIdle = gpGlobals->time +  UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15);
+	m_flTimeWeaponIdle = gpGlobals->time +  UTIL_WeaponTimeBase() + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 );
 }
 
 
-void CM249::Reload(void)
+void CM249::Reload( void )
 {
-	if (m_pPlayer->ammo_556 <= 0)
+	if( m_pPlayer->ammo_556 <= 0 )
 		return;
 
-	DefaultReload(100, M249_RELOAD1, 1.5);
+	DefaultReload( 100, M249_RELOAD1, 3.55);
 }
 
-
-void CM249::WeaponIdle(void)
+void CM249::WeaponIdle( void )
 {
 	ResetEmptySound();
 
-	m_pPlayer->GetAutoaimVector(AUTOAIM_5DEGREES);
+	m_pPlayer->GetAutoaimVector( AUTOAIM_5DEGREES );
 
-	if (m_flTimeWeaponIdle > UTIL_WeaponTimeBase())
+	if( m_flTimeWeaponIdle > UTIL_WeaponTimeBase() )
 		return;
 
 	int iAnim;
-	switch (RANDOM_LONG(0, 1))
+	switch( RANDOM_LONG( 0, 1 ) )
 	{
-	case 0:
-		iAnim = M249_SLOWIDLE;
+	case 0:	
+		iAnim = M249_SLOWIDLE;	
 		break;
-
 	default:
 	case 1:
 		iAnim = M249_IDLE2;
 		break;
 	}
 
-	SendWeaponAnim(iAnim);
+	SendWeaponAnim( iAnim );
 
-	m_flTimeWeaponIdle = gpGlobals->time +  UTIL_SharedRandomFloat(m_pPlayer->random_seed, 10, 15); // how long till we do this again.
+	m_flTimeWeaponIdle = gpGlobals->time + UTIL_SharedRandomFloat( m_pPlayer->random_seed, 10, 15 ); // how long till we do this again.
 }
 
-
-void CM249::ReloadStart(void)
+class CM249Ammo : public CBasePlayerAmmo
 {
-	SendWeaponAnim(M249_RELOAD1, UseDecrement());
-}
-
-void CM249::ReloadInsert(void)
-{
-	SendWeaponAnim(M249_RELOAD1, UseDecrement());
-}
-
-class CM249AmmoClip : public CBasePlayerAmmo
-{
-	void Spawn(void)
+	void Spawn( void )
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/w_saw_clip.mdl");
+		SET_MODEL( ENT( pev ), "models/w_ARgrenade.mdl" );
 		CBasePlayerAmmo::Spawn();
 	}
-	void Precache(void)
+	void Precache( void )
 	{
-		PRECACHE_MODEL("models/w_saw_clip.mdl");
-		PRECACHE_SOUND("items/9mmclip1.wav");
+		PRECACHE_MODEL( "models/w_saw_clip.mdl" );
+		PRECACHE_SOUND( "items/9mmclip1.wav" );
 	}
-	BOOL AddAmmo(CBaseEntity *pOther)
-	{
-		int bResult = (pOther->GiveAmmo(100, "556", 300) != -1);
-		if (bResult)
+	BOOL AddAmmo( CBaseEntity *pOther ) 
+	{ 
+		int bResult = ( pOther->GiveAmmo( 100, "556", 300 ) != -1 );
+
+		if( bResult )
 		{
-			EMIT_SOUND(ENT(pev), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM);
+			EMIT_SOUND( ENT( pev ), CHAN_ITEM, "items/9mmclip1.wav", 1, ATTN_NORM );
 		}
 		return bResult;
 	}
 };
 
-LINK_ENTITY_TO_CLASS(ammo_556, CM249AmmoClip);
+LINK_ENTITY_TO_CLASS( ammo_556, CM249Ammo )
