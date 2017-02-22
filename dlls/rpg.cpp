@@ -165,7 +165,7 @@ void CRpgRocket::RocketTouch( CBaseEntity *pOther )
 void CRpgRocket::Precache( void )
 {
 	PRECACHE_MODEL( "models/rpgrocket.mdl" );
-	m_iTrail = PRECACHE_MODEL( "sprites/rpgsmoke.spr" );
+	m_iTrail = PRECACHE_MODEL( "sprites/smoke.spr" );
 	PRECACHE_SOUND( "weapons/rocket1.wav" );
 }
 
@@ -185,18 +185,18 @@ void CRpgRocket::IgniteThink( void )
 		WRITE_SHORT( entindex() );	// entity
 		WRITE_SHORT( m_iTrail );	// model
 		WRITE_BYTE( 40 ); // life
-		WRITE_BYTE( 20 );  // width
+		WRITE_BYTE( 5 );  // width
 		WRITE_BYTE( 224 );   // r, g, b
 		WRITE_BYTE( 224 );   // r, g, b
 		WRITE_BYTE( 255 );   // r, g, b
-		WRITE_BYTE( 0 );	// brightness
+		WRITE_BYTE( 255 );	// brightness
 	MESSAGE_END();  // move PHS/PVS data sending into here (SEND_ALL, SEND_PVS, SEND_PHS)
 
-	m_flIgniteTime = gpGlobals->time + 0.1;
+	m_flIgniteTime = gpGlobals->time;
 
 	// set to follow laser spot
 	SetThink( &CRpgRocket::FollowThink );
-	pev->nextthink = gpGlobals->time + 0.3;
+	pev->nextthink = gpGlobals->time + 0.1;
 }
 
 void CRpgRocket::FollowThink( void )

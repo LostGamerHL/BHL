@@ -78,8 +78,6 @@ public:
 #define	WEAPON_SATCHEL			14
 #define	WEAPON_SNARK			15
 
-#define WEAPON_SAW 17
-
 #define WEAPON_ALLWEAPONS		(~(1<<WEAPON_SUIT))
 
 #define WEAPON_SUIT				31	// ?????
@@ -105,18 +103,18 @@ public:
 #define TRIPMINE_WEIGHT		-10
 
 // weapon clip/carry ammo capacities
-#define URANIUM_MAX_CARRY		250
+#define URANIUM_MAX_CARRY		100
 #define	_9MM_MAX_CARRY			250
 #define _357_MAX_CARRY			36
 #define BUCKSHOT_MAX_CARRY		125
 #define BOLT_MAX_CARRY			50
-#define ROCKET_MAX_CARRY		50
-#define HANDGRENADE_MAX_CARRY	20
-#define SATCHEL_MAX_CARRY		20
+#define ROCKET_MAX_CARRY		5
+#define HANDGRENADE_MAX_CARRY	10
+#define SATCHEL_MAX_CARRY		5
 #define TRIPMINE_MAX_CARRY		5
-#define SNARK_MAX_CARRY			20
+#define SNARK_MAX_CARRY			15
 #define HORNET_MAX_CARRY		8
-#define M203_GRENADE_MAX_CARRY	20
+#define M203_GRENADE_MAX_CARRY	10
 
 // the maximum amount of ammo each weapon's clip can hold
 #define WEAPON_NOCLIP			-1
@@ -124,7 +122,7 @@ public:
 //#define CROWBAR_MAX_CLIP		WEAPON_NOCLIP
 #define GLOCK_MAX_CLIP			17
 #define PYTHON_MAX_CLIP			6
-#define MP5_MAX_CLIP			30
+#define MP5_MAX_CLIP			50
 #define MP5_DEFAULT_AMMO		25
 #define SHOTGUN_MAX_CLIP		8
 #define CROSSBOW_MAX_CLIP		5
@@ -174,10 +172,9 @@ typedef	enum
 	BULLET_PLAYER_9MM, // glock
 	BULLET_PLAYER_MP5, // mp5
 	BULLET_PLAYER_357, // python
+	BULLET_PLAYER_556, //M249
 	BULLET_PLAYER_BUCKSHOT, // shotgun
 	BULLET_PLAYER_CROWBAR, // crowbar swipe
-
-BULLET_PLAYER_556,//weapon saw
 
 	BULLET_MONSTER_9MM,
 	BULLET_MONSTER_MP5,
@@ -367,7 +364,6 @@ extern DLL_GLOBAL	const char *g_pModelNameLaser;
 
 extern DLL_GLOBAL	short	g_sModelIndexLaserDot;// holds the index for the laser beam dot
 extern DLL_GLOBAL	short	g_sModelIndexFireball;// holds the index for the fireball
-extern DLL_GLOBAL	short	g_sModelIndexFireball2;
 extern DLL_GLOBAL	short	g_sModelIndexSmoke;// holds the index for the smoke cloud
 extern DLL_GLOBAL	short	g_sModelIndexWExplosion;// holds the index for the underwater explosion
 extern DLL_GLOBAL	short	g_sModelIndexBubbles;// holds the index for the bubbles model
@@ -987,49 +983,4 @@ public:
 private:
 	unsigned short m_usSnarkFire;
 };
-
-class CSaw : public CBasePlayerWeapon
-{
-public:
-
-#ifndef CLIENT_DLL
-	int		Save(CSave &save);
-	int		Restore(CRestore &restore);
-	static	TYPEDESCRIPTION m_SaveData[];
-#endif
-
-	void Spawn(void);
-	void Precache(void);
-	int iItemSlot(void) { return 6; }
-	int GetItemInfo(ItemInfo *p);
-	int AddToPlayer(CBasePlayer *pPlayer);
-
-	void PrimaryAttack(void);
-	BOOL Deploy(void);
-	void Reload(void);
-	void WeaponIdle(void);
-	virtual BOOL ShouldWeaponIdle(void) { return TRUE; }
-	float m_flNextAnimTime;
-	int m_iShell;
-
-	virtual BOOL UseDecrement(void)
-	{
-#if defined( CLIENT_WEAPONS )
-	return TRUE;
-#else
-	return FALSE;
-#endif
-	}
-
-	void ReloadStart( void );
-	void ReloadInsert( void );
-
-	enum M249_RELOAD_STATE { RELOAD_STATE_NONE = 0, RELOAD_STATE_OPEN, RELOAD_STATE_FILL };
-
-	int m_iReloadState;
-
-private:
-	unsigned short m_usSaw;
-};
-
 #endif // WEAPONS_H

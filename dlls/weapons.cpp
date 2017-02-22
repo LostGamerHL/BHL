@@ -41,8 +41,6 @@ DLL_GLOBAL const char *g_pModelNameLaser = "sprites/laserbeam.spr";
 DLL_GLOBAL	short g_sModelIndexLaserDot;// holds the index for the laser beam dot
 DLL_GLOBAL	short g_sModelIndexFireball;// holds the index for the fireball
 DLL_GLOBAL	short g_sModelIndexSmoke;// holds the index for the smoke cloud
-DLL_GLOBAL	short
-g_sModelIndexFireball2;// holds the index for the fireball
 DLL_GLOBAL	short g_sModelIndexWExplosion;// holds the index for the underwater explosion
 DLL_GLOBAL	short g_sModelIndexBubbles;// holds the index for the bubbles model
 DLL_GLOBAL	short g_sModelIndexBloodDrop;// holds the sprite index for the initial blood
@@ -171,6 +169,7 @@ void DecalGunshot( TraceResult *pTrace, int iBulletType )
 		case BULLET_MONSTER_MP5:
 		case BULLET_PLAYER_BUCKSHOT:
 		case BULLET_PLAYER_357:
+		case BULLET_PLAYER_556:
 		default:
 			// smoke and decal
 			UTIL_GunshotDecalTrace( pTrace, DamageDecal( pEntity, DMG_BULLET ) );
@@ -344,6 +343,11 @@ void W_Precache( void )
 	// satchel charge
 	UTIL_PrecacheOtherWeapon( "weapon_satchel" );
 #endif
+
+#if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
+	UTIL_PrecacheOtherWeapon("weapon_saw");
+	UTIL_PrecacheOther("ammo_556");
+#endif
 	// hand grenade
 	UTIL_PrecacheOtherWeapon("weapon_handgrenade");
 #if !defined( OEM_BUILD ) && !defined( HLDEMO_BUILD )
@@ -352,21 +356,18 @@ void W_Precache( void )
 
 	// hornetgun
 	UTIL_PrecacheOtherWeapon( "weapon_hornetgun" );
-	UTIL_PrecacheOtherWeapon( "weapon_saw" );
+
 	if( g_pGameRules->IsDeathmatch() )
 	{
 		UTIL_PrecacheOther( "weaponbox" );// container for dropped deathmatch weapons
 	}
 #endif
-	g_sModelIndexFireball = PRECACHE_MODEL( "sprites/xplo5.spr" );
-
-g_sModelIndexFireball2 = PRECACHE_MODEL( "sprites/xplo2.spr" );
-
+	g_sModelIndexFireball = PRECACHE_MODEL( "sprites/zerogxplode.spr" );// fireball
 	g_sModelIndexWExplosion = PRECACHE_MODEL( "sprites/WXplo1.spr" );// underwater fireball
 	g_sModelIndexSmoke = PRECACHE_MODEL( "sprites/steam1.spr" );// smoke
 	g_sModelIndexBubbles = PRECACHE_MODEL( "sprites/bubble.spr" );//bubbles
-	g_sModelIndexBloodSpray = PRECACHE_MODEL( "sprites/blood/extra/hbloodupb.spr" ); // initial blood
-	g_sModelIndexBloodDrop = PRECACHE_MODEL( "sprites/blood/extra/hbloodupb.spr" ); // splattered blood 
+	g_sModelIndexBloodSpray = PRECACHE_MODEL( "sprites/bloodspray.spr" ); // initial blood
+	g_sModelIndexBloodDrop = PRECACHE_MODEL( "sprites/blood.spr" ); // splattered blood 
 
 	g_sModelIndexLaser = PRECACHE_MODEL( (char *)g_pModelNameLaser );
 	g_sModelIndexLaserDot = PRECACHE_MODEL( "sprites/laserdot.spr" );
@@ -403,9 +404,21 @@ IMPLEMENT_SAVERESTORE( CBasePlayerItem, CBaseAnimating )
 
 TYPEDESCRIPTION	CBasePlayerWeapon::m_SaveData[] =
 {
+#if defined( CLIENT_WEAPONS )
+	DEFINE_FIELD( CBasePlayerWeapon, m_flNextPrimaryAttack, FIELD_FLOAT ),
+	DEFINE_FIELD( CBasePlayerWeapon, m_flNextSecondaryAttack, FIELD_FLOAT ),
+	DEFINE_FIELD( CBasePlayerWeapon, m_flTimeWeaponIdle, FIELD_FLOAT ),
+#else	// CLIENT_WEAPONS
 	DEFINE_FIELD( CBasePlayerWeapon, m_flNextPrimaryAttack, FIELD_TIME ),
 	DEFINE_FIELD( CBasePlayerWeapon, m_flNextSecondaryAttack, FIELD_TIME ),
 	DEFINE_FIELD( CBasePlayerWeapon, m_flTimeWeaponIdle, FIELD_TIME ),
+#endif	// CLIENT_WEAPONS
+	DEFINE_FIELD( CBasePlayerWeapon, m_iPrimaryAmmoType, FIELD_INTEGER ),
+	DEFINE_FIELD( CBasePlayerWeapon, m_iSecondaryAmmoType, FIELD_INTEGER ),
+	DEFINE_FIELD( CBasePlayerWeapon, m_iClip, FIELD_INTEGER ),
+	DEFINE_FIELD( CBasePlayerWeapon, m_iDefaultAmmo, FIELD_INTEGER ),
+	//DEFINE_FIELD( CBasePlayerWeapon, m_iClientClip, FIELD_INTEGER ), reset to zero on load so hud gets updated correctly
+	//DEFINE_FIELD( CBasePlayerWeapon, m_iClientWeaponState, FIELD_INTEGER ), reset to zero on load so hud gets updated correctly
 };
 
 IMPLEMENT_SAVERESTORE( CBasePlayerWeapon, CBasePlayerItem )
@@ -1477,13 +1490,6 @@ TYPEDESCRIPTION	CRpgRocket::m_SaveData[] =
 };
 
 IMPLEMENT_SAVERESTORE( CRpgRocket, CGrenade )
-
-
-TYPEDESCRIPTION CSaw::m_SaveData[] =
-{
-	DEFINE_FIELD(CSaw, m_iReloadState, FIELD_INTEGER),
-};
-IMPLEMENT_SAVERESTORE(CSaw, CBasePlayerWeapon);
 
 TYPEDESCRIPTION	CShotgun::m_SaveData[] =
 {

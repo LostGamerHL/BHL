@@ -29,8 +29,8 @@ LOCAL_C_INCLUDES := $(SDL_PATH)/include \
 		    $(LOCAL_PATH)/../game_shared
 
 LOCAL_SRC_FILES := agrunt.cpp airtank.cpp \
+           m249.cpp \
            aflock.cpp \
-           saw.cpp \
            animating.cpp \
            animation.cpp \
            apache.cpp \
